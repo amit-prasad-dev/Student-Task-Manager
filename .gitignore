@@ -1,0 +1,38 @@
+# Environment & OS
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.local
+.env.*.local
+
+# IDE & Editors
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.cache/
+frontend/*.tsbuildinfo
+
+# Java / Spring Boot / Maven
+backend/target/
+backend/*.jar
+backend/*.war
+backend/.mvn/timing.properties
+backend/.flattened-pom.xml
+
+# Java / Gradle (in case Gradle is used)
+backend/.gradle/
+backend/build/
+
+# Database local dumps / credentials
+*.sql.gz
+backend/src/main/resources/application-secret.properties
