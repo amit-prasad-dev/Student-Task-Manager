@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -98,13 +100,21 @@ class TaskControllerTest {
         when(taskService.getTaskById(99L))
                 .thenThrow(new ResourceNotFoundException("Task not found with ID: 99"));
 
-        mockMvc.perform(get("/api/v1/tasks/99")
+        Instant requestStarted = Instant.now();
+        var result = mockMvc.perform(get("/api/v1/tasks/99")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status", is(404)))
                 .andExpect(jsonPath("$.error", is("Not Found")))
                 .andExpect(jsonPath("$.message", containsString("Task not found with ID: 99")))
-                .andExpect(jsonPath("$.path", is("/api/v1/tasks/99")));
+                .andExpect(jsonPath("$.path", is("/api/v1/tasks/99")))
+                .andReturn();
+
+        Instant responseTimestamp = Instant.parse(
+                com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(), "$.timestamp")
+        );
+        assertFalse(responseTimestamp.isBefore(requestStarted.minusSeconds(1)));
+        assertFalse(responseTimestamp.isAfter(Instant.now().plusSeconds(1)));
     }
 
     @Test
@@ -190,9 +200,44 @@ class TaskControllerTest {
                         .content(pastDatePayload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status", is(400)))
-                .andExpect(jsonPath("$.fieldErrors[0].field", is("dueDate")));
+                .andExpect(jsonPath("$.fieldErrors[0].field", is("dueDate")))
+                .andExpect(jsonPath("$.fieldErrors[0].message", is("Due date must be in the present or future")));
 
         verify(taskService, never()).createTask(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/tasks accepts a null optional due date")
+    void createTask_NullDueDate_Returns201() throws Exception {
+        TaskResponseDTO responseDTO = new TaskResponseDTO(
+                6L,
+                "Study without a deadline",
+                null,
+                null,
+                Priority.MEDIUM,
+                TaskStatus.PENDING,
+                TaskType.REVISION,
+                false,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+        when(taskService.createTask(any(TaskCreateDTO.class))).thenReturn(responseDTO);
+
+        String jsonPayload = """
+                {
+                    "title": "Study without a deadline",
+                    "dueDate": null,
+                    "priority": "MEDIUM",
+                    "status": "PENDING",
+                    "taskType": "REVISION"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonPayload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dueDate").value(nullValue()));
     }
 
     @Test

@@ -300,7 +300,7 @@ export default function App() {
         )}
 
         {/* Main Tasks List Section */}
-        <section aria-label="Study task list">
+        <section id="task-list" aria-label="Study task list" tabIndex={-1}>
           <div className="tasks-section-header">
             <span className="tasks-count-label">
               {loading

@@ -1,6 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function ConfirmModal({ isOpen, task, onCancel, onConfirm, deleting }) {
+  const dialogRef = useRef(null);
+  const cancelButtonRef = useRef(null);
+  const openerRef = useRef(null);
+
+  // Focus the least destructive action on open and restore focus on close.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    openerRef.current = document.activeElement;
+    cancelButtonRef.current?.focus();
+
+    return () => {
+      if (openerRef.current?.isConnected) {
+        openerRef.current.focus();
+      } else {
+        // The delete button is removed with its task, so return to the task list.
+        document.getElementById('task-list')?.focus();
+      }
+      openerRef.current = null;
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape' && isOpen) {
@@ -11,11 +33,40 @@ export default function ConfirmModal({ isOpen, task, onCancel, onConfirm, deleti
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onCancel]);
 
+  function handleDialogKeyDown(e) {
+    if (e.key !== 'Tab') return;
+
+    const focusableElements = Array.from(
+      dialogRef.current?.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => element.getClientRects().length > 0);
+
+    if (focusableElements.length === 0) {
+      e.preventDefault();
+      dialogRef.current?.focus();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const focusIsOutsideDialog = !dialogRef.current?.contains(document.activeElement);
+
+    if (e.shiftKey && (document.activeElement === firstElement || focusIsOutsideDialog)) {
+      e.preventDefault();
+      lastElement.focus();
+    } else if (!e.shiftKey && (document.activeElement === lastElement || focusIsOutsideDialog)) {
+      e.preventDefault();
+      firstElement.focus();
+    }
+  }
+
   if (!isOpen || !task) return null;
 
   return (
     <div
       className="modal-overlay"
+      onKeyDown={handleDialogKeyDown}
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
@@ -23,7 +74,7 @@ export default function ConfirmModal({ isOpen, task, onCancel, onConfirm, deleti
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
     >
-      <div className="modal-content modal-content-sm">
+      <div ref={dialogRef} className="modal-content modal-content-sm" tabIndex={-1}>
         <div className="modal-header">
           <h2 id="confirm-modal-title" className="modal-title" style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <svg style={{ width: '1.25rem', height: '1.25rem' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -67,6 +118,7 @@ export default function ConfirmModal({ isOpen, task, onCancel, onConfirm, deleti
           <button
             type="button"
             className="btn-secondary"
+            ref={cancelButtonRef}
             onClick={onCancel}
             disabled={deleting}
           >

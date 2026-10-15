@@ -40,8 +40,8 @@ To maintain a smooth learning curve, the project evolves in distinct phases:
 
 | Layer | Technology | Key Details |
 |---|---|---|
-| **Frontend** | React 18+ (via Vite) | JavaScript (ES6+), Vanilla/Modular CSS, Fetch or Axios |
-| **Backend** | Java 17/21 & Spring Boot 3.x | Spring Web, Spring Data JPA, Hibernate, Bean Validation |
+| **Frontend** | React 19 (via Vite 8) | JavaScript (ES6+), CSS, Fetch API; Node.js `^20.19.0` or `>=22.12.0` |
+| **Backend** | Java 25 & Spring Boot 4.1.1 | Spring Web MVC, Spring Data JPA, Hibernate, Bean Validation |
 | **Database** | MySQL 8.x | Relational schema, InnoDB engine |
 | **Build Tools** | Maven (backend) / npm (frontend) | Standard multi-folder structure |
 | **API Protocol** | RESTful JSON | Standard HTTP status codes and error payloads |
@@ -67,25 +67,25 @@ Student-Task-Manager/
 │   │   │   │   ├── exception/      # Global exception handler & custom exceptions
 │   │   │   │   └── config/         # CORS configuration and beans
 │   │   │   └── resources/
-│   │   │       ├── application.properties
-│   │   │       └── schema.sql      # Database DDL & seed data
-│   │   └── test/                   # JUnit 5 & Mockito test suite
+│   │   │       └── application.properties # Database connection and JPA configuration
+│   │   └── test/                   # JUnit 5 & Mockito tests
+│   ├── .mvn/wrapper/               # Maven Wrapper configuration
+│   ├── mvnw / mvnw.cmd             # Maven Wrapper launchers
 │   └── pom.xml                     # Maven project configuration
 ├── frontend/                 # React + Vite application
 │   ├── src/
-│   │   ├── assets/                 # Icons and static resources
-│   │   ├── components/             # Reusable UI components (Navbar, TaskCard, TaskModal, StatCard, ConfirmModal)
-│   │   ├── pages/                  # Views (Dashboard, TaskListPage)
-│   │   ├── services/               # Centralized API service methods (api.js)
-│   │   ├── styles/                 # Theme tokens and modular CSS
-│   │   ├── App.jsx                 # App root & layout
+│   │   ├── assets/                 # Images and static assets
+│   │   ├── components/             # Navbar, task cards/forms, controls, dashboard, dialogs
+│   │   ├── services/api.js         # Centralized API service methods
+│   │   ├── App.jsx                 # Main application state and layout
+│   │   ├── App.css / index.css     # Application and global styles
 │   │   └── main.jsx                # React entrypoint
 │   ├── package.json
 │   └── vite.config.js
 ├── docs/                     # Specifications & learning documentation
 │   ├── requirements.md       # Functional & non-functional requirements
 │   ├── architecture.md       # Layered design & data flow
-│   ├── database.md           # Schema, ER diagram, and table specifications
+│   ├── database.md           # Current entity mapping and Hibernate schema setup
 │   └── api-spec.md           # REST endpoints, request/response contracts
 ├── .gitignore
 ├── AGENTS.md                 # Agent and contributor rules (this file)

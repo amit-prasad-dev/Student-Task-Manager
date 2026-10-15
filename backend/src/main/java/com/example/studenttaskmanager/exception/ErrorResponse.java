@@ -3,7 +3,8 @@ package com.example.studenttaskmanager.exception;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 /**
@@ -12,8 +13,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
-    private LocalDateTime timestamp;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    private OffsetDateTime timestamp;
 
     private int status;
     private String error;
@@ -22,11 +23,11 @@ public class ErrorResponse {
     private List<FieldErrorDetail> fieldErrors;
 
     public ErrorResponse() {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     public ErrorResponse(int status, String error, String message, String path) {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = OffsetDateTime.now(ZoneOffset.UTC);
         this.status = status;
         this.error = error;
         this.message = message;
@@ -34,7 +35,7 @@ public class ErrorResponse {
     }
 
     public ErrorResponse(int status, String error, String message, String path, List<FieldErrorDetail> fieldErrors) {
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = OffsetDateTime.now(ZoneOffset.UTC);
         this.status = status;
         this.error = error;
         this.message = message;
@@ -42,11 +43,11 @@ public class ErrorResponse {
         this.fieldErrors = fieldErrors;
     }
 
-    public LocalDateTime getTimestamp() {
+    public OffsetDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(OffsetDateTime timestamp) {
         this.timestamp = timestamp;
     }
 

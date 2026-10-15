@@ -32,6 +32,21 @@ export default function TaskModal({ isOpen, mode = 'create', task = null, onClos
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const titleInputRef = useRef(null);
+  const dialogRef = useRef(null);
+  const openerRef = useRef(null);
+
+  // Return keyboard focus to the control that opened the dialog.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    openerRef.current = document.activeElement;
+    return () => {
+      if (openerRef.current?.isConnected) {
+        openerRef.current.focus();
+      }
+      openerRef.current = null;
+    };
+  }, [isOpen]);
 
   // Initialize or reset form state whenever modal opens or active task changes
   useEffect(() => {
@@ -97,19 +112,46 @@ export default function TaskModal({ isOpen, mode = 'create', task = null, onClos
     }
 
     // Due Date validation:
-    // When creating a new task, @FutureOrPresent is enforced.
+    // When creating a new task, the due date must be now or later, matching @FutureOrPresent.
     // When editing, past due dates are allowed (to update overdue items).
     if (formData.dueDate && mode === 'create') {
       const selected = new Date(formData.dueDate);
       const now = new Date();
-      // Allow a 1-minute buffer for form filling
-      if (selected.getTime() < now.getTime() - 60000) {
-        newErrors.dueDate = 'Due date must be in the present or future for new tasks';
+      if (selected.getTime() < now.getTime()) {
+        newErrors.dueDate = 'Due date must be in the present or future';
       }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  }
+
+  function handleDialogKeyDown(e) {
+    if (e.key !== 'Tab') return;
+
+    const focusableElements = Array.from(
+      dialogRef.current?.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+      ) || []
+    ).filter((element) => element.getClientRects().length > 0);
+
+    if (focusableElements.length === 0) {
+      e.preventDefault();
+      dialogRef.current?.focus();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const focusIsOutsideDialog = !dialogRef.current?.contains(document.activeElement);
+
+    if (e.shiftKey && (document.activeElement === firstElement || focusIsOutsideDialog)) {
+      e.preventDefault();
+      lastElement.focus();
+    } else if (!e.shiftKey && (document.activeElement === lastElement || focusIsOutsideDialog)) {
+      e.preventDefault();
+      firstElement.focus();
+    }
   }
 
   async function handleSubmit(e) {
@@ -145,6 +187,7 @@ export default function TaskModal({ isOpen, mode = 'create', task = null, onClos
   return (
     <div
       className="modal-overlay"
+      onKeyDown={handleDialogKeyDown}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -152,7 +195,7 @@ export default function TaskModal({ isOpen, mode = 'create', task = null, onClos
       aria-modal="true"
       aria-labelledby="modal-task-title"
     >
-      <div className="modal-content">
+      <div ref={dialogRef} className="modal-content" tabIndex={-1}>
         {/* Header */}
         <div className="modal-header">
           <h2 id="modal-task-title" className="modal-title">
