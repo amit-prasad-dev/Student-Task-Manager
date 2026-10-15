@@ -104,9 +104,9 @@ export default function App() {
 
         if (!ignore) {
           setTasks(taskList);
+          setBackendOnline(true);
           if (dashboardStats) {
             setStats(dashboardStats);
-            setBackendOnline(true);
           }
           setError(null);
           setLoading(false);
